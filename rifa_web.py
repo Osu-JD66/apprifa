@@ -122,6 +122,10 @@ archivo_excel = "rifa.xlsx"
 if os.path.exists(archivo_excel):
     df_registro = pd.read_excel(archivo_excel)
 
+    # Botón para refrescar
+if st.button("🔄 Refrescar lista"):
+    st.session_state["refrescar"] = True
+
     # Buscar por nombre (opcional)
     filtro = st.text_input("🔍 Buscar participante por nombre")
     if filtro:
