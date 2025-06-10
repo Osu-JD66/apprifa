@@ -78,7 +78,7 @@ if st.button("🎰 Generar números de rifa"):
         pdf.cell(0, 10, "ganaconuliseslaguaira.com", 0, 1, "C")
         pdf.set_font("Arial", "", 10)
         pdf.cell(
-            0, 10, "Contacto: ulinel815@gmail.com | Tel: +58 414-3298246", 0, 1, "C")
+            0, 10, "Contacto: salcedocross54@gmail.com | Tel: +58 424-1650376", 0, 1, "C")
 
         # --- Guardar PDF en memoria ---
         pdf_buffer = io.BytesIO()
