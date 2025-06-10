@@ -116,7 +116,7 @@ if st.button("🎰 Generar números de rifa"):
 
         archivo_excel = "rifa.xlsx"
 
-if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
+        if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
     if os.path.exists(archivo_excel):
         os.remove(archivo_excel)
         st.success("✅ Registro borrado correctamente, ahora puedes empezar de nuevo.")
