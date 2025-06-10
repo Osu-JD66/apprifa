@@ -114,17 +114,23 @@ if st.button("🎰 Generar números de rifa"):
                     mime="application/pdf"
                 )
 
-        st.markdown("---")
-st.markdown("### 📋 Registro de todos los participantes")
+        archivo_excel = "rifa.xlsx"
 
-archivo_excel = "rifa.xlsx"
+if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
+    if os.path.exists(archivo_excel):
+        os.remove(archivo_excel)
+        st.success("✅ Registro borrado correctamente, ahora puedes empezar de nuevo.")
+    else:
+        st.info("ℹ️ No existe ningún registro para borrar.")
+
+st.markdown("### 📋 Registro de todos los participantes")
 
 if os.path.exists(archivo_excel):
     df_registro = pd.read_excel(archivo_excel)
 
-    # Botón para refrescar
-if st.button("🔄 Refrescar lista"):
-    st.session_state["refrescar"] = True
+    # Botón para refrescar lista
+    if st.button("🔄 Refrescar lista"):
+        st.session_state["refrescar"] = True
 
     # Buscar por nombre (opcional)
     filtro = st.text_input("🔍 Buscar participante por nombre")
