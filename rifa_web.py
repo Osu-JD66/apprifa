@@ -65,8 +65,11 @@ if st.button("🎰 Generar números de rifa"):
         pdf.ln(5)
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"Participante: {nombre}", 0, 1)
-        pdf.cell(
-            0, 10, f"Números asignados: {', '.join(numeros_formateados)}", 0, 1)
+        pdf.cell(0, 10, "Números asignados:", 0, 1)
+        for i in range(0, len(numeros_formateados), 10):
+        grupo = numeros_formateados[i:i+10]
+        pdf.cell(0, 10, ", ".join(grupo), 0, 1)
+
         pdf.cell(
             0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1)
         pdf.ln(10)
