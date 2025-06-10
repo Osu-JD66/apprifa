@@ -5,6 +5,8 @@ import pandas as pd
 from datetime import datetime
 from fpdf import FPDF
 import os
+import zipfile
+import io
 
 st.set_page_config(page_title="Generador de Rifa", page_icon="🎟️")
 
@@ -18,11 +20,32 @@ if st.button("🎰 Generar números de rifa"):
     if not nombre.strip():
         st.error("⚠️ Debes ingresar el nombre del participante.")
     else:
-        numeros = random.sample(range(10000), cantidad)
-        numeros_formateados = [f"{n:04d}" for n in numeros]
+        cantidad = int(cantidad)
+        archivo_excel = "rifa.xlsx"
+
+        # Leer números ya asignados
+        usados = set()
+        if os.path.exists(archivo_excel):
+            df_existente = pd.read_excel(archivo_excel)
+            if "Números" in df_existente.columns:
+                for lista in df_existente["Números"]:
+                    for num in str(lista).split(","):
+                        usados.add(num.strip())
+        else:
+            df_existente = pd.DataFrame()
+
+        # Crear lista de disponibles (0000 a 9999 menos los usados)
+        disponibles = [f"{n:04d}" for n in range(10000) if f"{n:04d}" not in usados]
+
+        # Verifica que haya suficientes disponibles
+        if len(disponibles) < cantidad:
+            st.error(f"😢 Solo quedan {len(disponibles)} números disponibles.")
+            st.stop()
+
+        # Elegir números únicos
+        numeros_formateados = random.sample(disponibles, cantidad)
 
         # --- Guardar en Excel ---
-        archivo_excel = "rifa.xlsx"
         nueva_fila = pd.DataFrame([{
             "Nombre": nombre,
             "Cantidad": cantidad,
@@ -30,15 +53,10 @@ if st.button("🎰 Generar números de rifa"):
             "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M")
         }])
 
-        if os.path.exists(archivo_excel):
-            df_existente = pd.read_excel(archivo_excel)
-            df_total = pd.concat([df_existente, nueva_fila], ignore_index=True)
-        else:
-            df_total = nueva_fila
-
+        df_total = pd.concat([df_existente, nueva_fila], ignore_index=True)
         df_total.to_excel(archivo_excel, index=False)
 
-        # --- Generar PDF ---
+        # --- Generar PDF en memoria ---
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", 'B', 16)
@@ -57,12 +75,44 @@ if st.button("🎰 Generar números de rifa"):
         pdf.set_font("Arial", "", 10)
         pdf.cell(0, 10, "Contacto: ulinel815@gmail.com | Tel: +58 414-3298246", 0, 1, "C")
 
+        # --- Guardar PDF en memoria ---
+        pdf_buffer = io.BytesIO()
+        pdf_output = pdf.output(dest='S').encode('latin-1')
+        pdf_buffer.write(pdf_output)
+        pdf_buffer.seek(0)
+
+        # --- Guardar Excel en memoria ---
+        excel_buffer = io.BytesIO()
+        df_total.to_excel(excel_buffer, index=False)
+        excel_buffer.seek(0)
+
+        # --- Guardar en session_state ---
+        st.session_state["pdf_data"] = pdf_buffer
+        st.session_state["pdf_filename"] = f"Rifa_{nombre.replace(' ', '_')}.pdf"
+        st.session_state["excel_data"] = excel_buffer
+        st.session_state["excel_filename"] = "rifa.xlsx"
+
         nombre_pdf = f"Rifa_{nombre.replace(' ', '_')}.pdf"
         pdf.output(nombre_pdf)
 
-        st.success(f"✅ ¡Números generados con éxito!")
-        st.write(f"📄 Se generó el PDF: `{nombre_pdf}`")
-        st.write(f"📊 Registro actualizado en `{archivo_excel}`")
-
-        with open(nombre_pdf, "rb") as f:
-            st.download_button("⬇️ Descargar PDF", f, file_name=nombre_pdf)
+        # Mostrar botones de descarga si ya están los archivos generados
+        if "pdf_data" in st.session_state and "excel_data" in st.session_state:
+            st.success("✅ ¡Números generados con éxito!")
+        
+            col1, col2 = st.columns(2)
+        
+            with col1:
+                st.download_button(
+                    label="📄 Descargar PDF",
+                    data=st.session_state["pdf_data"],
+                    file_name=st.session_state["pdf_filename"],
+                    mime="application/pdf"
+                )
+        
+            with col2:
+                st.download_button(
+                    label="📊 Descargar Excel",
+                    data=st.session_state["excel_data"],
+                    file_name=st.session_state["excel_filename"],
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
