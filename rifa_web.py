@@ -1,4 +1,3 @@
-
 import streamlit as st
 import random
 import pandas as pd
@@ -14,7 +13,8 @@ st.title("🎟️ Generador de Números de Rifa")
 st.markdown("#### ganaconuliseslaguaira.com")
 
 nombre = st.text_input("🧑 Nombre del participante")
-cantidad = st.number_input("🔢 Cantidad de números (1 a 10000)", min_value=1, max_value=10000, step=1)
+cantidad = st.number_input(
+    "🔢 Cantidad de números (1 a 10000)", min_value=1, max_value=10000, step=1)
 
 if st.button("🎰 Generar números de rifa"):
     if not nombre.strip():
@@ -35,7 +35,8 @@ if st.button("🎰 Generar números de rifa"):
             df_existente = pd.DataFrame()
 
         # Crear lista de disponibles (0000 a 9999 menos los usados)
-        disponibles = [f"{n:04d}" for n in range(10000) if f"{n:04d}" not in usados]
+        disponibles = [f"{n:04d}" for n in range(
+            10000) if f"{n:04d}" not in usados]
 
         # Verifica que haya suficientes disponibles
         if len(disponibles) < cantidad:
@@ -64,16 +65,20 @@ if st.button("🎰 Generar números de rifa"):
         pdf.ln(5)
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"Participante: {nombre}", 0, 1)
-        pdf.cell(0, 10, f"Números asignados: {', '.join(numeros_formateados)}", 0, 1)
-        pdf.cell(0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1)
+        pdf.cell(
+            0, 10, f"Números asignados: {', '.join(numeros_formateados)}", 0, 1)
+        pdf.cell(
+            0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1)
         pdf.ln(10)
         pdf.set_font("Arial", "I", 12)
-        pdf.multi_cell(0, 10, "¡Gracias por confiar en nosotros! Tus números han sido registrados oficialmente para el sorteo.", 0, "C")
+        pdf.multi_cell(
+            0, 10, "¡Gracias por confiar en nosotros! Tus números han sido registrados oficialmente para el sorteo.", 0, "C")
         pdf.ln(15)
         pdf.set_font("Arial", "B", 14)
         pdf.cell(0, 10, "ganaconuliseslaguaira.com", 0, 1, "C")
         pdf.set_font("Arial", "", 10)
-        pdf.cell(0, 10, "Contacto: ulinel815@gmail.com | Tel: +58 414-3298246", 0, 1, "C")
+        pdf.cell(
+            0, 10, "Contacto: ulinel815@gmail.com | Tel: +58 414-3298246", 0, 1, "C")
 
         # --- Guardar PDF en memoria ---
         pdf_buffer = io.BytesIO()
@@ -98,9 +103,9 @@ if st.button("🎰 Generar números de rifa"):
         # Mostrar botones de descarga si ya están los archivos generados
         if "pdf_data" in st.session_state and "excel_data" in st.session_state:
             st.success("✅ ¡Números generados con éxito!")
-        
+
             col1, col2 = st.columns(2)
-        
+
             with col1:
                 st.download_button(
                     label="📄 Descargar PDF",
@@ -108,11 +113,38 @@ if st.button("🎰 Generar números de rifa"):
                     file_name=st.session_state["pdf_filename"],
                     mime="application/pdf"
                 )
-        
-            with col2:
-                st.download_button(
-                    label="📊 Descargar Excel",
-                    data=st.session_state["excel_data"],
-                    file_name=st.session_state["excel_filename"],
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+
+        st.markdown("---")
+st.markdown("### 📋 Registro de todos los participantes")
+
+archivo_excel = "rifa.xlsx"
+
+if os.path.exists(archivo_excel):
+    df_registro = pd.read_excel(archivo_excel)
+
+    # Buscar por nombre (opcional)
+    filtro = st.text_input("🔍 Buscar participante por nombre")
+    if filtro:
+        df_filtrado = df_registro[df_registro["Nombre"].str.contains(
+            filtro, case=False)]
+    else:
+        df_filtrado = df_registro
+
+    # Mostrar tabla
+    st.dataframe(df_filtrado.sort_values(
+        "Fecha", ascending=False), use_container_width=True)
+
+    # Botón para descargar el registro completo como Excel
+    excel_output = io.BytesIO()
+    df_filtrado.to_excel(excel_output, index=False)
+    excel_output.seek(0)
+
+    st.download_button(
+        label="📥 Descargar registro completo (Excel)",
+        data=excel_output,
+        file_name="registro_completo_rifa.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+else:
+    st.info("Aún no hay registros para mostrar.")
