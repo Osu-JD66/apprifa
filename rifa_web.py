@@ -4,26 +4,30 @@ import pandas as pd
 from datetime import datetime
 from fpdf import FPDF
 import os
-import zipfile
 import io
 
+# Configuración inicial
 st.set_page_config(page_title="Generador de Rifa", page_icon="🎟️")
-
 st.title("🎟️ Generador de Números de Rifa")
 st.markdown("#### ganaconuliseslaguaira.com")
 
-nombre = st.text_input("🧑 Nombre del participante")
-cantidad = st.number_input(
-    "🔢 Cantidad de números (1 a 10000)", min_value=1, max_value=10000, step=1)
+# Archivos
+archivo_excel = "rifa.xlsx"
+PDF_FOLDER = "pdfs"
+os.makedirs(PDF_FOLDER, exist_ok=True)
 
+# Entrada de datos
+nombre = st.text_input("🧑 Nombre del participante")
+cantidad = st.number_input("🔢 Cantidad de números (1 a 10000)", min_value=1, max_value=10000, step=1)
+
+# Botón generar rifa
 if st.button("🎰 Generar números de rifa"):
     if not nombre.strip():
         st.error("⚠️ Debes ingresar el nombre del participante.")
     else:
         cantidad = int(cantidad)
-        archivo_excel = "rifa.xlsx"
 
-        # Leer números ya asignados
+        # Leer números usados
         usados = set()
         if os.path.exists(archivo_excel):
             df_existente = pd.read_excel(archivo_excel)
@@ -34,30 +38,15 @@ if st.button("🎰 Generar números de rifa"):
         else:
             df_existente = pd.DataFrame()
 
-        # Crear lista de disponibles (0000 a 9999 menos los usados)
-        disponibles = [f"{n:04d}" for n in range(
-            10000) if f"{n:04d}" not in usados]
+        disponibles = [f"{n:04d}" for n in range(10000) if f"{n:04d}" not in usados]
 
-        # Verifica que haya suficientes disponibles
         if len(disponibles) < cantidad:
             st.error(f"😢 Solo quedan {len(disponibles)} números disponibles.")
             st.stop()
 
-        # Elegir números únicos
         numeros_formateados = random.sample(disponibles, cantidad)
 
-        # --- Guardar en Excel ---
-        nueva_fila = pd.DataFrame([{
-            "Nombre": nombre,
-            "Cantidad": cantidad,
-            "Números": ", ".join(numeros_formateados),
-            "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M")
-        }])
-
-        df_total = pd.concat([df_existente, nueva_fila], ignore_index=True)
-        df_total.to_excel(archivo_excel, index=False)
-
-        # --- Generar PDF en memoria ---
+        # Crear PDF
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", 'B', 16)
@@ -65,89 +54,81 @@ if st.button("🎰 Generar números de rifa"):
         pdf.ln(5)
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"Participante: {nombre}", 0, 1)
-        pdf.cell(0, 10, "Números asignados:", 0, 1)
-        for i in range(0, len(numeros_formateados), 10):
-          grupo = numeros_formateados[i:i+10]
-          pdf.cell(0, 10, ", ".join(grupo), 0, 1)
-
-        pdf.cell(
-            0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1)
+        pdf.cell(0, 10, f"Números asignados: {', '.join(numeros_formateados)}", 0, 1)
+        pdf.cell(0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1)
         pdf.ln(10)
         pdf.set_font("Arial", "I", 12)
-        pdf.multi_cell(
-            0, 10, "¡Gracias por confiar en nosotros! Tus números han sido registrados oficialmente para el sorteo.", 0, "C")
+        pdf.multi_cell(0, 10, "¡Gracias por confiar en nosotros! Tus números han sido registrados oficialmente para el sorteo.", 0, "C")
         pdf.ln(15)
         pdf.set_font("Arial", "B", 14)
         pdf.cell(0, 10, "ganaconuliseslaguaira.com", 0, 1, "C")
         pdf.set_font("Arial", "", 10)
-        pdf.cell(
-            0, 10, "Contacto: salcedocross54@gmail.com | Tel: +58 424-1650376", 0, 1, "C")
+        pdf.cell(0, 10, "Contacto: salcedocross54@gmail.com | Tel: +58 424-1650376", 0, 1, "C")
 
-        # --- Guardar PDF en memoria ---
+        nombre_pdf = f"Rifa_{nombre.replace(' ', '_')}.pdf"
+        ruta_pdf = os.path.join(PDF_FOLDER, nombre_pdf)
+        pdf.output(ruta_pdf)
+
+        # Guardar en Excel
+        nueva_fila = pd.DataFrame([{
+            "Nombre": nombre,
+            "Cantidad": cantidad,
+            "Números": ", ".join(numeros_formateados),
+            "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "Archivo PDF": nombre_pdf
+        }])
+        df_total = pd.concat([df_existente, nueva_fila], ignore_index=True)
+        df_total.to_excel(archivo_excel, index=False)
+
+        # Descargar PDF
         pdf_buffer = io.BytesIO()
         pdf_output = pdf.output(dest='S').encode('latin-1')
         pdf_buffer.write(pdf_output)
         pdf_buffer.seek(0)
 
-        # --- Guardar Excel en memoria ---
-        excel_buffer = io.BytesIO()
-        df_total.to_excel(excel_buffer, index=False)
-        excel_buffer.seek(0)
+        st.success("✅ ¡Números generados con éxito!")
 
-        # --- Guardar en session_state ---
-        st.session_state["pdf_data"] = pdf_buffer
-        st.session_state["pdf_filename"] = f"Rifa_{nombre.replace(' ', '_')}.pdf"
-        st.session_state["excel_data"] = excel_buffer
-        st.session_state["excel_filename"] = "rifa.xlsx"
+        st.download_button(
+            label="📄 Descargar PDF",
+            data=pdf_buffer,
+            file_name=nombre_pdf,
+            mime="application/pdf"
+        )
 
-        nombre_pdf = f"Rifa_{nombre.replace(' ', '_')}.pdf"
-        pdf.output(nombre_pdf)
-
-        # Mostrar botones de descarga si ya están los archivos generados
-        if "pdf_data" in st.session_state and "excel_data" in st.session_state:
-            st.success("✅ ¡Números generados con éxito!")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.download_button(
-                    label="📄 Descargar PDF",
-                    data=st.session_state["pdf_data"],
-                    file_name=st.session_state["pdf_filename"],
-                    mime="application/pdf"
-                )
-
-archivo_excel = "rifa.xlsx"
-
+# Borrar registro completo
 if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
     if os.path.exists(archivo_excel):
         os.remove(archivo_excel)
-        st.success("✅ Registro borrado correctamente, ahora puedes empezar de nuevo.")
+        st.success("✅ Registro borrado correctamente.")
     else:
         st.info("ℹ️ No existe ningún registro para borrar.")
 
+# Mostrar historial de participantes
+st.markdown("---")
 st.markdown("### 📋 Registro de todos los participantes")
 
 if os.path.exists(archivo_excel):
     df_registro = pd.read_excel(archivo_excel)
 
-    # Botón para refrescar lista
-    if st.button("🔄 Refrescar lista"):
-        st.session_state["refrescar"] = True
-
-    # Buscar por nombre (opcional)
+    # Filtro por nombre
     filtro = st.text_input("🔍 Buscar participante por nombre")
     if filtro:
-        df_filtrado = df_registro[df_registro["Nombre"].str.contains(
-            filtro, case=False)]
+        df_filtrado = df_registro[df_registro["Nombre"].str.contains(filtro, case=False)]
     else:
         df_filtrado = df_registro
 
     # Mostrar tabla
-    st.dataframe(df_filtrado.sort_values(
-        "Fecha", ascending=False), use_container_width=True)
+    columnas = ["Nombre", "Cantidad", "Fecha"]
+    if "📄 Ver PDF" in df_filtrado.columns:
+     columnas.append("📄 Ver PDF")
 
-    # Botón para descargar el registro completo como Excel
+    st.dataframe(df_filtrado[columnas])
+
+    # Total de números asignados
+    total_numeros = df_filtrado["Cantidad"].sum()
+    st.markdown(f"**🔢 Total de números asignados:** {total_numeros}")
+
+    # Botón para descargar Excel
     excel_output = io.BytesIO()
     df_filtrado.to_excel(excel_output, index=False)
     excel_output.seek(0)
@@ -158,7 +139,20 @@ if os.path.exists(archivo_excel):
         file_name="registro_completo_rifa.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
 else:
     st.info("Aún no hay registros para mostrar.")
 
+    # Enlaces a los PDF
+    # 📂 Mostrar todos los PDF generados en la carpeta /pdfs
+st.markdown("### 📄 Historial de PDFs generados")
+
+pdfs_disponibles = [
+    f for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")
+]
+
+if pdfs_disponibles:
+    for pdf_name in sorted(pdfs_disponibles, reverse=True):
+        ruta = os.path.join(PDF_FOLDER, pdf_name)
+        st.markdown(f"- [Abrir {pdf_name}](./{ruta})")
+    else:
+     st.info("No hay PDFs generados aún.")
