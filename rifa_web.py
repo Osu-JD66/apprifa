@@ -118,7 +118,7 @@ if os.path.exists(archivo_excel):
         df_filtrado = df_registro
 
     # Mostrar tabla
-    columnas = ["Nombre", "Cantidad", "Fecha"]
+    columnas = ["Nombre", "Cantidad", "Números", "Fecha"]
     if "📄 Ver PDF" in df_filtrado.columns:
      columnas.append("📄 Ver PDF")
 
@@ -127,6 +127,28 @@ if os.path.exists(archivo_excel):
     # Total de números asignados
     total_numeros = df_filtrado["Cantidad"].sum()
     st.markdown(f"**🔢 Total de números asignados:** {total_numeros}")
+
+    numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)")
+
+if numero_buscar:
+    if os.path.exists(archivo_excel):
+        df_registro = pd.read_excel(archivo_excel)
+        
+        # Filtrar filas donde el número esté en la lista de números asignados
+        # La columna "Números" contiene cadenas tipo "0001, 0023, 0456"
+        df_encontrado = df_registro[df_registro["Números"].apply(
+            lambda x: numero_buscar.zfill(4) in [n.strip() for n in str(x).split(",")]
+        )]
+
+        if not df_encontrado.empty:
+            st.success(f"El número {numero_buscar.zfill(4)} fue asignado a:")
+            for _, row in df_encontrado.iterrows():
+                st.write(f"- **{row['Nombre']}**, asignado el {row['Fecha']}")
+        else:
+            st.warning(f"El número {numero_buscar.zfill(4)} no está asignado a ningún participante.")
+    else:
+        st.info("No hay registros todavía.")
+
 
     # Botón para descargar Excel
     excel_output = io.BytesIO()
