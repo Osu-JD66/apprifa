@@ -119,9 +119,6 @@ if os.path.exists(archivo_excel):
 
     # Mostrar tabla
     columnas = ["Nombre", "Cantidad", "Números", "Fecha"]
-    if "📄 Ver PDF" in df_filtrado.columns:
-     columnas.append("📄 Ver PDF")
-
     st.dataframe(df_filtrado[columnas])
 
     # Total de números asignados
