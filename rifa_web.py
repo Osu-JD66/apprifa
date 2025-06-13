@@ -48,23 +48,42 @@ if st.button("🎰 Generar números de rifa"):
 
         # Crear PDF
         pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.set_left_margin(15)
+        pdf.set_right_margin(15)
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, "¡Gracias por participar!", 0, 1, "C")
-        pdf.ln(5)
-        pdf.set_font("Arial", size=12)
-        pdf.cell(0, 10, f"Participante: {nombre}", 0, 1)
-        pdf.cell(0, 10, f"Números asignados: {', '.join(numeros_formateados)}", 0, 1)
-        pdf.cell(0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1)
-        pdf.ln(10)
-        pdf.set_font("Arial", "I", 12)
-        pdf.multi_cell(0, 10, "¡Gracias por confiar en nosotros! Tus números han sido registrados oficialmente para el sorteo.", 0, "C")
-        pdf.ln(15)
-        pdf.set_font("Arial", "B", 14)
-        pdf.cell(0, 10, "ganaconuliseslaguaira.com", 0, 1, "C")
-        pdf.set_font("Arial", "", 10)
-        pdf.cell(0, 10, "Contacto: salcedocross54@gmail.com | Tel: +58 424-1650376", 0, 1, "C")
 
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "¡Gracias por participar!", ln=1, align="C")
+        pdf.ln(5)
+
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, f"Participante: {nombre}", ln=1)
+
+        # Organizar los números en líneas de máximo 10 números por línea
+        numeros_por_linea = 12
+        lineas_numeros = [
+            ", ".join(numeros_formateados[i:i+numeros_por_linea])
+            for i in range(0, len(numeros_formateados), numeros_por_linea)
+        ]
+        texto_numeros = "\n".join(lineas_numeros)
+                                  
+        pdf.set_font("Arial", size=12)
+        pdf.multi_cell(0, 10, f"Números asignados:\n{texto_numeros}")
+
+        pdf.cell(0, 10, f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", ln=1)
+        pdf.ln(10)
+
+        pdf.set_font("Arial", "I", 12)
+        pdf.multi_cell(0, 10, "¡Gracias por confiar en nosotros! Tus números han sido registrados oficialmente para el sorteo.", align="C")
+        pdf.ln(15)
+
+        pdf.set_font("Arial", "B", 14)
+        pdf.cell(0, 10, "ganaconuliseslaguaira.com", ln=1, align="C")
+        pdf.set_font("Arial", "", 10)
+        pdf.cell(0, 10, "Contacto: salcedocross54@gmail.com | Tel: +58 424-1650376", ln=1, align="C")
+
+        # Guardar PDF
         nombre_pdf = f"Rifa_{nombre.replace(' ', '_')}.pdf"
         ruta_pdf = os.path.join(PDF_FOLDER, nombre_pdf)
         pdf.output(ruta_pdf)
