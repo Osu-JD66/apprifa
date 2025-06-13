@@ -182,15 +182,22 @@ else:
 
     # Enlaces a los PDF
     # 📂 Mostrar todos los PDF generados en la carpeta /pdfs
-st.markdown("### 📄 Historial de PDFs generados")
+    st.markdown("### 📄 Historial de PDFs generados")
 
-pdfs_disponibles = [
-    f for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")
-]
+    pdfs_disponibles = [
+        f for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")
+    ]
 
-if pdfs_disponibles:
-    for pdf_name in sorted(pdfs_disponibles, reverse=True):
-        ruta = os.path.join(PDF_FOLDER, pdf_name)
-        st.markdown(f"- [Abrir {pdf_name}](./{ruta})")
+    if pdfs_disponibles:
+        for pdf_name in sorted(pdfs_disponibles, reverse=True):
+            ruta = os.path.join(PDF_FOLDER, pdf_name)
+            with open(ruta, "rb") as f:
+                pdf_bytes = f.read()
+                st.download_button(
+                    label=f"📥 Descargar {pdf_name}",
+                    data=pdf_bytes,
+                    file_name=pdf_name,
+                    mime="application/pdf"
+                )
     else:
-     st.info("No hay PDFs generados aún.")
+        st.info("No hay PDFs generados aún.")
