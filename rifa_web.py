@@ -115,12 +115,12 @@ if st.button("🎰 Generar números de rifa"):
         )
 
 # Borrar registro completo
-if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
-    if os.path.exists(archivo_excel):
-        os.remove(archivo_excel)
-        st.success("✅ Registro borrado correctamente.")
-    else:
-        st.info("ℹ️ No existe ningún registro para borrar.")
+#if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
+   # if os.path.exists(archivo_excel):
+       # os.remove(archivo_excel)
+        #st.success("✅ Registro borrado correctamente.")
+    #else:
+       # st.info("ℹ️ No existe ningún registro para borrar.")
 
 # Mostrar historial de participantes
 st.markdown("---")
