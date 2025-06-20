@@ -146,7 +146,7 @@ if os.path.exists(archivo_excel):
 
     numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)")
 
-if numero_buscar:
+ if numero_buscar:
     if os.path.exists(archivo_excel):
         df_registro = pd.read_excel(archivo_excel)
         
