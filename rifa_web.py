@@ -60,14 +60,14 @@ if st.button("🎰 Generar números de rifa"):
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"Participante: {nombre}", ln=1)
 
-        # Organizar los números en líneas de máximo 10 números por línea
+        # Organizar los números en líneas de máximo 12
         numeros_por_linea = 12
         lineas_numeros = [
             ", ".join(numeros_formateados[i:i+numeros_por_linea])
             for i in range(0, len(numeros_formateados), numeros_por_linea)
         ]
         texto_numeros = "\n".join(lineas_numeros)
-                                  
+
         pdf.set_font("Arial", size=12)
         pdf.multi_cell(0, 10, f"Números asignados:\n{texto_numeros}")
 
@@ -114,17 +114,12 @@ if st.button("🎰 Generar números de rifa"):
             mime="application/pdf"
         )
 
-# Borrar registro completo
-#if st.button("🗑️ Borrar registro completo y empezar de nuevo"):
-   # if os.path.exists(archivo_excel):
-       # os.remove(archivo_excel)
-        #st.success("✅ Registro borrado correctamente.")
-    #else:
-       # st.info("ℹ️ No existe ningún registro para borrar.")
-
 # Mostrar historial de participantes
 st.markdown("---")
 st.markdown("### 📋 Registro de todos los participantes")
+
+df_registro = pd.DataFrame()
+df_filtrado = pd.DataFrame()
 
 if os.path.exists(archivo_excel):
     df_registro = pd.read_excel(archivo_excel)
@@ -144,14 +139,13 @@ if os.path.exists(archivo_excel):
     total_numeros = df_filtrado["Cantidad"].sum()
     st.markdown(f"**🔢 Total de números asignados:** {total_numeros}")
 
-    numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)")
+# Este input va afuera del if, para que siempre exista la variable
+numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)")
 
 if numero_buscar:
     if os.path.exists(archivo_excel):
         df_registro = pd.read_excel(archivo_excel)
-        
-        # Filtrar filas donde el número esté en la lista de números asignados
-        # La columna "Números" contiene cadenas tipo "0001, 0023, 0456"
+
         df_encontrado = df_registro[df_registro["Números"].apply(
             lambda x: numero_buscar.zfill(4) in [n.strip() for n in str(x).split(",")]
         )]
@@ -165,8 +159,8 @@ if numero_buscar:
     else:
         st.info("No hay registros todavía.")
 
-
-    # Botón para descargar Excel
+# Botón para descargar Excel (solo si hay datos)
+if not df_filtrado.empty:
     excel_output = io.BytesIO()
     df_filtrado.to_excel(excel_output, index=False)
     excel_output.seek(0)
@@ -177,27 +171,24 @@ if numero_buscar:
         file_name="registro_completo_rifa.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+# Historial de PDFs generados
+st.markdown("### 📄 Historial de PDFs generados")
+
+pdfs_disponibles = [
+    f for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")
+]
+
+if pdfs_disponibles:
+    for pdf_name in sorted(pdfs_disponibles, reverse=True):
+        ruta = os.path.join(PDF_FOLDER, pdf_name)
+        with open(ruta, "rb") as f:
+            pdf_bytes = f.read()
+            st.download_button(
+                label=f"📥 Descargar {pdf_name}",
+                data=pdf_bytes,
+                file_name=pdf_name,
+                mime="application/pdf"
+            )
 else:
-    st.info("Aún no hay registros para mostrar.")
-
-    # Enlaces a los PDF
-    # 📂 Mostrar todos los PDF generados en la carpeta /pdfs
-    st.markdown("### 📄 Historial de PDFs generados")
-
-    pdfs_disponibles = [
-        f for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")
-    ]
-
-    if pdfs_disponibles:
-        for pdf_name in sorted(pdfs_disponibles, reverse=True):
-            ruta = os.path.join(PDF_FOLDER, pdf_name)
-            with open(ruta, "rb") as f:
-                pdf_bytes = f.read()
-                st.download_button(
-                    label=f"📥 Descargar {pdf_name}",
-                    data=pdf_bytes,
-                    file_name=pdf_name,
-                    mime="application/pdf"
-                )
-    else:
-        st.info("No hay PDFs generados aún.")
+    st.info("No hay PDFs generados aún.")
