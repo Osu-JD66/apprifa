@@ -60,7 +60,7 @@ if st.button("🎰 Generar números de rifa"):
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"Participante: {nombre}", ln=1)
 
-        # Organizar los números en líneas de máximo 12
+        # Organizar los números en líneas
         numeros_por_linea = 12
         lineas_numeros = [
             ", ".join(numeros_formateados[i:i+numeros_por_linea])
@@ -121,6 +121,9 @@ st.markdown("### 📋 Registro de todos los participantes")
 df_registro = pd.DataFrame()
 df_filtrado = pd.DataFrame()
 
+# ✅ Definir numero_buscar para evitar NameError
+numero_buscar = ""
+
 if os.path.exists(archivo_excel):
     df_registro = pd.read_excel(archivo_excel)
 
@@ -139,8 +142,8 @@ if os.path.exists(archivo_excel):
     total_numeros = df_filtrado["Cantidad"].sum()
     st.markdown(f"**🔢 Total de números asignados:** {total_numeros}")
 
-# Este input va afuera del if, para que siempre exista la variable
-numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)")
+# Input para buscar por número (definido siempre)
+numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)", value=numero_buscar)
 
 if numero_buscar:
     if os.path.exists(archivo_excel):
@@ -159,7 +162,7 @@ if numero_buscar:
     else:
         st.info("No hay registros todavía.")
 
-# Botón para descargar Excel (solo si hay datos)
+# Botón para descargar Excel (si hay datos)
 if not df_filtrado.empty:
     excel_output = io.BytesIO()
     df_filtrado.to_excel(excel_output, index=False)
