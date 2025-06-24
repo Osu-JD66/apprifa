@@ -24,11 +24,9 @@ tab1, tab2 = st.tabs(["🎟️ Generar y Ver Registros", "🏆 Seleccionar Ganad
 # ============================
 
 with tab1:
-    # Entrada de datos
     nombre = st.text_input("🧑 Nombre del participante")
     cantidad = st.number_input("🔢 Cantidad de números (1 a 10000)", min_value=1, max_value=10000, step=1)
 
-    # Botón generar rifa
     if st.button("🎰 Generar números de rifa"):
         if not nombre.strip():
             st.error("⚠️ Debes ingresar el nombre del participante.")
@@ -68,7 +66,6 @@ with tab1:
             pdf.set_font("Arial", size=12)
             pdf.cell(0, 10, f"Participante: {nombre}", ln=1)
 
-            # Organizar los números en líneas de máximo 12
             numeros_por_linea = 12
             lineas_numeros = [
                 ", ".join(numeros_formateados[i:i+numeros_por_linea])
@@ -91,12 +88,10 @@ with tab1:
             pdf.set_font("Arial", "", 10)
             pdf.cell(0, 10, "Contacto: salcedocross54@gmail.com | Tel: +58 424-1650376", ln=1, align="C")
 
-            # Guardar PDF
             nombre_pdf = f"Rifa_{nombre.replace(' ', '_')}.pdf"
             ruta_pdf = os.path.join(PDF_FOLDER, nombre_pdf)
             pdf.output(ruta_pdf)
 
-            # Guardar en Excel
             nueva_fila = pd.DataFrame([{
                 "Nombre": nombre,
                 "Cantidad": cantidad,
@@ -107,7 +102,6 @@ with tab1:
             df_total = pd.concat([df_existente, nueva_fila], ignore_index=True)
             df_total.to_excel(archivo_excel, index=False)
 
-            # Descargar PDF
             pdf_buffer = io.BytesIO()
             pdf_output = pdf.output(dest='S').encode('latin-1')
             pdf_buffer.write(pdf_output)
@@ -122,30 +116,27 @@ with tab1:
                 mime="application/pdf"
             )
 
-    # Mostrar historial de participantes
+    # Mostrar historial
     st.markdown("---")
     st.markdown("### 📋 Registro de todos los participantes")
 
     if os.path.exists(archivo_excel):
         df_registro = pd.read_excel(archivo_excel)
 
-        # Filtro por nombre
         filtro = st.text_input("🔍 Buscar participante por nombre")
         if filtro:
             df_filtrado = df_registro[df_registro["Nombre"].str.contains(filtro, case=False)]
         else:
             df_filtrado = df_registro
 
-        # Mostrar tabla
         columnas = ["Nombre", "Cantidad", "Números", "Fecha"]
         st.dataframe(df_filtrado[columnas])
 
-        # Total de números asignados desde 1023
+        # Mostrar total desde 1023
         base_inicial = 1023
         total_numeros = df_filtrado["Cantidad"].sum() + base_inicial
-        st.markdown(f"**🔢 Total de números asignados (desde 1.023):** {total_numeros:,}")
+        st.markdown(f"**🔢 Total de números asignados** {total_numeros:,}")
 
-        # Buscar por número
         numero_buscar = st.text_input("🔍 Buscar participante por número de rifa (ejemplo: 0123)")
 
         if numero_buscar:
@@ -196,21 +187,6 @@ with tab1:
 # ============================
 
 with tab2:
-    st.subheader("🏆 Escoger número ganador de la rifa")
+    st.subheader("🏆 Seleccionar ganador")
 
-    numero_ganador = st.text_input("🎯 Ingresa el número ganador (ej: 0123)").zfill(4)
-
-    if st.button("🎉 Verificar ganador"):
-        if not numero_ganador:
-            st.warning("Debes ingresar un número válido.")
-        elif os.path.exists(archivo_excel):
-            df = pd.read_excel(archivo_excel)
-            ganador_df = df[df["Números"].apply(lambda x: numero_ganador in str(x).split(","))]
-
-            if not ganador_df.empty:
-                ganador = ganador_df.iloc[0]
-                st.success(f"🎉 El número {numero_ganador} fue asignado a: **{ganador['Nombre']}** el {ganador['Fecha']}")
-            else:
-                st.warning(f"El número {numero_ganador} no fue asignado.")
-        else:
-            st.info("Todavía no hay registros.")
+    st.markdown("✅ **Todos los participantes están guardados en la base de datos, listos para la selección del ganador (dentro de poco el sistema automático para seleccionar el ganador estará subido).**")
