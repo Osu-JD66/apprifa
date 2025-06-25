@@ -44,7 +44,7 @@ with tab1:
             else:
                 df_existente = pd.DataFrame()
 
-            disponibles = [f"{n:04d}" for n in range(301) if f"{n:04d}" not in usados]
+            disponibles = [f"{n:04d}" for n in range(10000) if f"{n:04d}" not in usados]
 
             if len(disponibles) < cantidad:
                 st.error(f"😢 Solo quedan {len(disponibles)} números disponibles.")
