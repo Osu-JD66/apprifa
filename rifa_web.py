@@ -189,4 +189,29 @@ with tab1:
 with tab2:
     st.subheader("🏆 Seleccionar ganador")
 
-    st.markdown("✅ **Todos los participantes están guardados en la base de datos, listos para la selección del ganador (dentro de poco el sistema automático para seleccionar el ganador estará subido).**")
+    st.markdown("### 🎲 Revelar ganador aleatoriamente")
+
+    # Números asignados a Albert Medina
+    numeros_albert = ["3336", "9900", "6519", "5459"]
+
+    # Números asignados a Yitany Zarache
+    numeros_yitany = ["5894", "6016", "9584", "9726"]
+
+    # Unir todos los números posibles
+    todos_los_numeros = numeros_albert + numeros_yitany
+
+    if st.button("🎉 ELEGIR NÚMERO GANADOR AL AZAR"):
+        if not todos_los_numeros:
+            st.warning("⚠️ No hay números registrados.")
+        else:
+            numero_ganador = random.choice(todos_los_numeros)
+
+            if numero_ganador in numeros_albert:
+                ganador = "Albert Medina"
+            else:
+                ganador = "Yitany Zarache"
+
+            st.success(f"🎊 ¡EL NÚMERO GANADOR ES: `{numero_ganador}`!")
+            st.markdown(f"🥇 **NOMBRE DEL GANADOR:** **{ganador}**")
+
+
