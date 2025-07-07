@@ -133,7 +133,7 @@ with tab1:
         st.dataframe(df_filtrado[columnas])
 
         # Mostrar total desde 1023
-        base_inicial = 1283
+        base_inicial = 1282
         total_numeros = df_filtrado["Cantidad"].sum() + base_inicial
         st.markdown(f"**🔢 Total de números asignados** {total_numeros:,}")
 
